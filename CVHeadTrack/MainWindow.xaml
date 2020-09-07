@@ -7,6 +7,14 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="125*"/>
+            <ColumnDefinition Width="125*"/>
+        </Grid.ColumnDefinitions>
+        <Button Content="Link with flight sim" Margin="339,88,337,0" Grid.ColumnSpan="2" Height="20" VerticalAlignment="Top" Click="LinkFlightSim"/>
+        <Button Content="Left" Margin="82,152,195,0" VerticalAlignment="Top" Height="65"/>
+        <Button Content="Right" HorizontalAlignment="Left" Margin="195,152,0,0" VerticalAlignment="Top" Width="119" Height="65" Grid.Column="1"/>
+        <TextBlock x:Name="debugPanel" HorizontalAlignment="Left" Margin="372,28,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+
     </Grid>
 </Window>
