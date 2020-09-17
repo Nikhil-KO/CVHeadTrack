@@ -1,18 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 // SimConnect broken, review readme file
 // Flight sim connection 
 using Microsoft.FlightSimulator.SimConnect;
@@ -25,6 +16,9 @@ using Dlib = DlibDotNet.Dlib;
 // Read from url
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
+// UDP socker
+using System.Net;
+using System.Net.Sockets;
 
 namespace CVHeadTrack {
     /// <summary>
@@ -43,6 +37,11 @@ namespace CVHeadTrack {
         // Neural net stuff
         private FrontalFaceDetector faceDetector;
         private ShapePredictor shapePredictor;
+        // Opentrack upd socket objects
+        private Socket updSocket;
+        private IPAddress openTrackAddr;
+        private IPEndPoint openTrackEndPoint;
+
 
         public MainWindow() {
             InitializeComponent();
@@ -53,6 +52,10 @@ namespace CVHeadTrack {
             // Set up face nn
             this.faceDetector = Dlib.GetFrontalFaceDetector();
             this.shapePredictor = ShapePredictor.Deserialize("assets/shape_predictor_68_face_landmarks.dat");
+            // Set up UDP socket
+            this.updSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            this.openTrackAddr = IPAddress.Parse("127.0.0.1");
+            this.openTrackEndPoint = new IPEndPoint(this.openTrackAddr, 4242);
         }
 
         private void CleanSimConnectHandle() {
@@ -178,9 +181,38 @@ namespace CVHeadTrack {
                     var bi = BitmapExtensions.ToBitmap(img);
                     this.imageItem.Source = BitmapToImageSource(bi);
                 }
-
             }
             DebugDialog("Finished");
+        }
+
+        // Send array of data to Opentrack socket
+        // Each double is formated to a byte array and but in little endian
+        private void sendOpenTrackUDP(double[] data) {
+            byte[] sendBuffer = new byte[data.Length * sizeof(double)];
+            for (int i = 0; i < data.Length; i++) {
+                byte[] converted = BitConverter.GetBytes(data[i]);
+                if (!BitConverter.IsLittleEndian) { // OpenTrack uses LittleEndian
+                    Array.Reverse(converted);
+                }
+                for (int j = 0; j < sizeof(double); j++) {
+                    sendBuffer[i * sizeof(double) + j] = converted[j];
+                }
+            }
+            this.updSocket.SendTo(sendBuffer, this.openTrackEndPoint);
+        }
+
+        // Send some fixed and random test data to the OpenTrack socket
+        private void TestUDP(object sender, RoutedEventArgs e) {
+            DebugDialog("Sending test UDP signal");
+            Random rnd = new Random();
+            double[] test = new double[6];
+            test[0] = 5;
+            test[1] = 3;
+            test[2] = 2;
+            test[3] = rnd.Next(-50, 50);
+            test[4] = rnd.Next(-50, 50);
+            test[5] = rnd.Next(-50, 50);
+            sendOpenTrackUDP(test);
         }
     }
 }
