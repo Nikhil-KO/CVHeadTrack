@@ -1,8 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -12,49 +13,174 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+// SimConnect broken, review readme file
+// Flight sim connection 
 using Microsoft.FlightSimulator.SimConnect;
 using System.Runtime.InteropServices;
-
+using System.ComponentModel;
+// Face NN
+using DlibDotNet;
+using DlibDotNet.Extensions;
+using Dlib = DlibDotNet.Dlib;
+// Read from url
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
 
 namespace CVHeadTrack {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window {
+    public partial class MainWindow : System.Windows.Window {
 
+        // SimConnect broken, review readme file
         private IntPtr simConnectHandle;
+        private SimConnect simconnect;
+        private const int WM_USER_SIMCONNECT = 0x0402;
+        // Wpf stuff
+        private TextBlock debugTextBlock;
+        private TextBox camUrl;
+        private Image imageItem;
+        // Neural net stuff
+        private FrontalFaceDetector faceDetector;
+        private ShapePredictor shapePredictor;
 
         public MainWindow() {
             InitializeComponent();
+            // Set up image viewer
+            this.debugTextBlock = (TextBlock)this.FindName("DebugPanel");
+            this.imageItem = (Image)this.FindName("ImageItem");
+            this.camUrl = (TextBox)this.FindName("CameraUrl");
+            // Set up face nn
+            this.faceDetector = Dlib.GetFrontalFaceDetector();
+            this.shapePredictor = ShapePredictor.Deserialize("assets/shape_predictor_68_face_landmarks.dat");
+        }
+
+        private void CleanSimConnectHandle() {
+            if (simconnect != null) {
+                simconnect.Dispose();
+                simconnect = null;
+            }
+        }
+
+        void WindowClose(object sender, CancelEventArgs e) {
+            this.faceDetector.Dispose();
+            this.shapePredictor.Dispose();
+            CleanSimConnectHandle();
         }
 
         private void DebugDialog(String msg) {
-            TextBlock myTextBlock = (TextBlock)this.FindName("debugPanel");
-            myTextBlock.Text = msg;
-
+            this.debugTextBlock.Text = msg;
         }
 
+        // SimConnect broken, review readme file
         private void LinkFlightSim(object sender, RoutedEventArgs e) {
             DebugDialog("Starting to link");
             // Open
             // Declare a SimConnect object
-            SimConnect simconnect = null;
             // User-defined win32 event
-            const int WM_USER_SIMCONNECT = 0x0402;
             bool success = true;
             try {
-                simconnect = new SimConnect("Managed Data Request", this.simConnectHandle, WM_USER_SIMCONNECT, null, 0);
+                this.simconnect = new SimConnect("Managed Data Request", this.simConnectHandle, WM_USER_SIMCONNECT, null, 0);
             } catch (COMException ex) {
                 success = false;
                 DebugDialog("Failed to open connection " + ex.Message);
-                if (simconnect != null) {
-                    simconnect.Dispose();
-                    simconnect = null;
-                }
+                CleanSimConnectHandle();
             }
             if (success) {
                 DebugDialog("Attached to game!");
             }
+        }
+
+        private void ConnectCamera(object sender, RoutedEventArgs e) {
+            DebugDialog("Connecting to camera...");
+            // get input
+            String url = this.camUrl.Text;
+            // If empty use default else attach to input camera
+            VideoCapture cap = url.Equals("") ? new VideoCapture() : new VideoCapture(url);
+            if (!cap.IsOpened()) {
+                DebugDialog("Failed to connect to camera");
+                return;
+            }
+            DebugDialog("Conencted!");
+            Mat temp = new Mat();
+            ImageWindow imgWin = new ImageWindow();
+            // Keep processing until window closed
+            while (!imgWin.IsClosed()) {
+                Console.WriteLine("reading");
+                if (!cap.Read(temp)) {
+                    break;
+                }
+                // Display in window
+                System.Drawing.Bitmap t = temp.ToBitmap();
+                BitmapImage b = BitmapToImageSource(t);
+                this.imageItem.Source = b;
+                // Copy from the cv2 image to dlib format then process and output
+                var array = new byte[temp.Width * temp.Height * temp.ElemSize()];
+                Marshal.Copy(temp.Data, array, 0, array.Length);
+                using (var cimg = Dlib.LoadImageData<BgrPixel>(array, (uint)temp.Height, (uint)temp.Width, (uint)(temp.Width * temp.ElemSize()))) {
+                    Console.WriteLine("Processing face nn");
+                    var faces = this.faceDetector.Operator(cimg);
+                    // Find the pose of each face.
+                    var shapes = new List<FullObjectDetection>();
+                    for (var i = 0; i < faces.Length; ++i) {
+                        var det = this.shapePredictor.Detect(cimg, faces[i]);
+                        shapes.Add(det);
+                    }
+
+                    // Display it all on the screen
+                    imgWin.ClearOverlay();
+                    imgWin.SetImage(cimg);
+                    var lines = Dlib.RenderFaceDetections(shapes);
+                    imgWin.AddOverlay(lines);
+                    // some clean up required
+                    foreach (var line in lines)
+                        line.Dispose();
+                }
+                Cv2.WaitKey();
+            }
+            imgWin.Dispose();
+            temp.Dispose();
+            cap.Dispose();
+            DebugDialog("Successfull detach");
+        }
+
+        // Util method to draw System.Drawing.Bitmap to wpf image panel
+        public BitmapImage BitmapToImageSource(System.Drawing.Bitmap bitmap) {
+            using (MemoryStream memory = new MemoryStream()) {
+                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                memory.Position = 0;
+                BitmapImage bitmapimage = new BitmapImage();
+                bitmapimage.BeginInit();
+                bitmapimage.StreamSource = memory;
+                bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapimage.EndInit();
+                return bitmapimage;
+            }
+        }
+
+        private void DebugImageTest(object sender, RoutedEventArgs e) {
+            DebugDialog("Starting face ML");
+            using (var fd = Dlib.GetFrontalFaceDetector())
+            using (var sp = ShapePredictor.Deserialize("assets/shape_predictor_68_face_landmarks.dat")) {
+                DebugDialog("Model loaded");
+                var img = Dlib.LoadImage<RgbPixel>("assets/image.jpeg");              
+                var faces = fd.Operator(img);
+                foreach (var face in faces) {
+                    // find the landmark points for this face
+                    var shape = sp.Detect(img, face);
+                    // draw the landmark points on the image
+                    for (var i = 0; i < shape.Parts; i++) {
+                        DlibDotNet.Point point = shape.GetPart((uint)i);
+                        var rect = new DlibDotNet.Rectangle(point);
+                        Dlib.DrawRectangle(img, rect, color: new RgbPixel(255, 255, 0), thickness: 4);
+                    }
+                    Dlib.SaveJpeg(img, "output.jpg");
+                    var bi = BitmapExtensions.ToBitmap(img);
+                    this.imageItem.Source = BitmapToImageSource(bi);
+                }
+
+            }
+            DebugDialog("Finished");
         }
     }
 }
