@@ -42,7 +42,8 @@ namespace CVHeadTrack {
         private Socket updSocket;
         private IPAddress openTrackAddr;
         private IPEndPoint openTrackEndPoint;
-
+        // Tracker feedback textblocks
+        private TextBlock[] userTrackFeedback;
 
         public MainWindow() {
             InitializeComponent();
@@ -58,6 +59,14 @@ namespace CVHeadTrack {
             this.updSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.openTrackAddr = IPAddress.Parse("127.0.0.1");
             this.openTrackEndPoint = new IPEndPoint(this.openTrackAddr, 4242);
+            // Set up pointers to feedback textblocks
+            this.userTrackFeedback = new TextBlock[6];
+            this.userTrackFeedback[0] = (TextBlock)this.FindName("UserTrackX");
+            this.userTrackFeedback[1] = (TextBlock)this.FindName("UserTrackY");
+            this.userTrackFeedback[2] = (TextBlock)this.FindName("UserTrackZ");
+            this.userTrackFeedback[3] = (TextBlock)this.FindName("UserTrackYaw");
+            this.userTrackFeedback[4] = (TextBlock)this.FindName("UserTrackPitch");
+            this.userTrackFeedback[5] = (TextBlock)this.FindName("UserTrackRoll");
         }
 
         private void CleanSimConnectHandle() {
@@ -191,6 +200,13 @@ namespace CVHeadTrack {
             DebugDialog("Finished");
         }
 
+        // Updates head position values on GUI
+        private void updateUserTrackFeedback(double[] data) {
+            for (int i = 0; i < this.userTrackFeedback.Length; i++) {
+                this.userTrackFeedback[i].Text = data[i].ToString();
+            }
+        }
+
         // Send array of data to Opentrack socket
         // Each double is formated to a byte array and but in little endian
         private void sendOpenTrackUDP(double[] data) {
@@ -218,6 +234,7 @@ namespace CVHeadTrack {
             test[3] = rnd.Next(-50, 50);
             test[4] = rnd.Next(-50, 50);
             test[5] = rnd.Next(-50, 50);
+            updateUserTrackFeedback(test);
             sendOpenTrackUDP(test);
         }
     }

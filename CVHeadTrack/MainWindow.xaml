@@ -16,10 +16,28 @@
         <Button x:Name="ConnectCameraButton" Content="Connect to camera &#xD;&#xA;and init Neural net" Margin="0,109,215,0" VerticalAlignment="Top" Height="65" Click="ConnectCamera" Grid.Column="1" HorizontalAlignment="Right" Width="140"/>
         <Button Content="Start with &#xD;&#xA;debug image" Margin="0,109,40,0" VerticalAlignment="Top" Height="65" Grid.Column="1" Click="DebugImageTest" HorizontalAlignment="Right" Width="140"/>
         <TextBlock x:Name="DebugPanel" Margin="40,24,40,0" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2" Background="#B2311FE4"><Run Text="Debug pannel"/><LineBreak/><Run/></TextBlock>
-        <Image Name="ImageItem" Margin="192,203,190,0" Grid.ColumnSpan="2" Height="317" VerticalAlignment="Top"/>
+        <Image Name="ImageItem" Margin="260,203,190,0" Grid.ColumnSpan="2" Height="317" VerticalAlignment="Top"/>
         <TextBox x:Name="CameraUrl" HorizontalAlignment="Left" Height="23" Margin="99,134,0,0" TextWrapping="Wrap" Text="http://192.168.1.13:4747/video" VerticalAlignment="Top" Width="229"/>
         <TextBlock HorizontalAlignment="Left" Margin="99,96,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="33" Width="187"><Run Text="Enter camera "/><Run Text="url "/><Run Text="here or leave blank for default webcam"/></TextBlock>
         <Button Content="Test UDP connection" Grid.Column="1" HorizontalAlignment="Right" Height="27" Margin="0,62,40,0" VerticalAlignment="Top" Width="140" Click="TestUDP"/>
         <Button Content="Stop camera" Grid.Column="1" HorizontalAlignment="Right" Margin="0,184,40,0" Width="140" Click="StopCamera" Height="27" VerticalAlignment="Top"/>
+        <Grid HorizontalAlignment="Left" Height="140" Margin="40,203,0,0" VerticalAlignment="Top" Width="197">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,31,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top" Width="58"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,52,0,0" TextWrapping="Wrap" Text="Z" VerticalAlignment="Top" Width="58"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,73,0,0" TextWrapping="Wrap" Text="Yaw" VerticalAlignment="Top" Width="58"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,94,0,0" TextWrapping="Wrap" Text="Pitch" VerticalAlignment="Top" Width="58"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,115,0,0" TextWrapping="Wrap" Text="Roll" VerticalAlignment="Top" Width="58"/>
+            <TextBlock x:Name="UserTrackX" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
+            <TextBlock x:Name="UserTrackY" HorizontalAlignment="Left" Margin="10,31,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
+            <TextBlock x:Name="UserTrackZ" HorizontalAlignment="Left" Margin="10,52,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
+            <TextBlock x:Name="UserTrackYaw" HorizontalAlignment="Left" Margin="10,76,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
+            <TextBlock x:Name="UserTrackPitch" HorizontalAlignment="Left" Margin="10,97,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
+            <TextBlock x:Name="UserTrackRoll" HorizontalAlignment="Left" Margin="10,118,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
+        </Grid>
     </Grid>
 </Window>
