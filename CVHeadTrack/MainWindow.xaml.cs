@@ -37,6 +37,7 @@ namespace CVHeadTrack {
         // Neural net stuff
         private FrontalFaceDetector faceDetector;
         private ShapePredictor shapePredictor;
+        private bool faceMutexLock;
         // Opentrack upd socket objects
         private Socket updSocket;
         private IPAddress openTrackAddr;
@@ -52,6 +53,7 @@ namespace CVHeadTrack {
             // Set up face nn
             this.faceDetector = Dlib.GetFrontalFaceDetector();
             this.shapePredictor = ShapePredictor.Deserialize("assets/shape_predictor_68_face_landmarks.dat");
+            this.faceMutexLock = true;
             // Set up UDP socket
             this.updSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.openTrackAddr = IPAddress.Parse("127.0.0.1");
@@ -94,7 +96,15 @@ namespace CVHeadTrack {
             }
         }
 
+        private void StopCamera(object sender, RoutedEventArgs e) {
+            this.faceMutexLock = true;
+            this.imageItem.Source = null;
+        }
+
         private void ConnectCamera(object sender, RoutedEventArgs e) {
+            // Lock
+            ((Button)this.FindName("ConnectCameraButton")).IsEnabled = false;
+            this.faceMutexLock = false;
             DebugDialog("Connecting to camera...");
             // get input
             String url = this.camUrl.Text;
@@ -102,49 +112,45 @@ namespace CVHeadTrack {
             VideoCapture cap = url.Equals("") ? new VideoCapture() : new VideoCapture(url);
             if (!cap.IsOpened()) {
                 DebugDialog("Failed to connect to camera");
+                cap.Dispose();
+                this.faceMutexLock = true;
+                ((Button)this.FindName("ConnectCameraButton")).IsEnabled = true;
                 return;
             }
             DebugDialog("Conencted!");
             Mat temp = new Mat();
-            ImageWindow imgWin = new ImageWindow();
-            // Keep processing until window closed
-            while (!imgWin.IsClosed()) {
+            // Keep processing until unlocked
+            while (!this.faceMutexLock) {
                 Console.WriteLine("reading");
                 if (!cap.Read(temp)) {
                     break;
                 }
-                // Display in window
-                System.Drawing.Bitmap t = temp.ToBitmap();
-                BitmapImage b = BitmapToImageSource(t);
-                this.imageItem.Source = b;
+                Cv2.CvtColor(temp, temp, ColorConversionCodes.BGR2RGB);
                 // Copy from the cv2 image to dlib format then process and output
                 var array = new byte[temp.Width * temp.Height * temp.ElemSize()];
                 Marshal.Copy(temp.Data, array, 0, array.Length);
-                using (var cimg = Dlib.LoadImageData<BgrPixel>(array, (uint)temp.Height, (uint)temp.Width, (uint)(temp.Width * temp.ElemSize()))) {
+                using (var img = Dlib.LoadImageData<RgbPixel>(array, (uint)temp.Height, (uint)temp.Width, (uint)(temp.Width * temp.ElemSize()))) {
                     Console.WriteLine("Processing face nn");
-                    var faces = this.faceDetector.Operator(cimg);
-                    // Find the pose of each face.
-                    var shapes = new List<FullObjectDetection>();
-                    for (var i = 0; i < faces.Length; ++i) {
-                        var det = this.shapePredictor.Detect(cimg, faces[i]);
-                        shapes.Add(det);
+                    var faces = this.faceDetector.Operator(img);
+                    foreach (var face in faces) {
+                        // find the landmark points for this face
+                        var shape = this.shapePredictor.Detect(img, face);
+                        // draw the landmark points on the image
+                        for (var i = 0; i < shape.Parts; i++) {
+                            DlibDotNet.Point point = shape.GetPart((uint)i);
+                            var rect = new DlibDotNet.Rectangle(point);
+                            Dlib.DrawRectangle(img, rect, color: new RgbPixel(255, 255, 0), thickness: 4);
+                        }
                     }
-
-                    // Display it all on the screen
-                    imgWin.ClearOverlay();
-                    imgWin.SetImage(cimg);
-                    var lines = Dlib.RenderFaceDetections(shapes);
-                    imgWin.AddOverlay(lines);
-                    // some clean up required
-                    foreach (var line in lines)
-                        line.Dispose();
+                    var bi = BitmapExtensions.ToBitmap(img);
+                    this.imageItem.Source = BitmapToImageSource(bi);
                 }
                 Cv2.WaitKey();
             }
-            imgWin.Dispose();
             temp.Dispose();
             cap.Dispose();
             DebugDialog("Successfull detach");
+            ((Button)this.FindName("ConnectCameraButton")).IsEnabled = true;
         }
 
         // Util method to draw System.Drawing.Bitmap to wpf image panel
