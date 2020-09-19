@@ -1,25 +1,55 @@
 # CVHeadTrack
-Custom made, Computer Vision based head tracking software made using OpenCV and SimConnect API for Flight Simulator 2020.
-Progress
+Custom made, Computer Vision based head tracking software made using OpenCV, DLib and OpenTrack to communicate with game.
 
-Currently can connect to webcam/ip camera url and detect facial landmarks. Decent range of head turn. 
-<img src="https://lh3.googleusercontent.com/Gw2wuQuHnWtDOu9vwblvoahnzVj2mw9sqa363riS02qS5wuP8MuywHKGsUpBB2j3_3Yiatvdjn0_lLcKEEeAdxV2r7dLc1HvWVcKFC5Nic1dcMkIcieTYW9JdRpmE3wRav-eMr7BJ7_d3TGz4Jx7SeD9CtMw5VVsCgy0Y4bva_Axl9u_AeBGtG_Apc-P6llVcivxaIaZFn8_iAEcu5eA1qyrpwskroqj-CrP7NyiubCRRP1l8RUgckZdlClUlGIAP5UTBkecPZ5R8XkDStU5i_RpGCcQzKuhOHFMLe_BYS4n7uMmWZNpwufapL48rj19A32QlVMfZUyzOA_n86Swsdlt_ryYTe08lavEN8BfN33eChHVLxOctNQj8HdAAtuKq45nEHqF0-iK-te73qoEagWRnmc09Knoxe3J7f4c2_66eLDKL7PYTRqjuUMxiWDccdbafsJf8xNv6hSHAdehDT6YoEoDWPWLbGtPEm_8QYgklDwDYBLlZJ1ONUVs_zbkUHysihyPmARiwPvyE5vbrnKMVmfucdjtirF2gpEvvtvvBDjeW6y_-Qo2wuCNAQ114r2LpcjT4NnVuy8yGlNZ-vBM3l3CbXr3nmSUDfjRJct-93A926CQ2__GillM7yd7T-vEHhpbBHWa_bKf8AsCaonbZt-1BQd1vmhh7Ew_tSUCIl24uhQ6blhMFD1pjw=w436-h319-no?authuser=0" alt="Sample face tracking" height="200px"/>
+I chose C# so I can learn .NET and WPF. Had to do with wrapper libraries for OpenCV and DLib but it does the job. 
 
-Next step is to parse the face data to a software like OpenTrack or wait for flight sim team to fix/implement CameraRelative6DOF function. 
-Prefer to go direct to game but I guess publishers don't care about dev kits.
-<br>
+<img src="https://www.meme-arsenal.com/memes/19192be53df3176390c7ef513363ae5c.jpg" width="50px">
+
+## Progress
+
+Prototype complete, tested on <a href="https://store.steampowered.com/app/359320/Elite_Dangerous/">Elite Dangerous</a>, need to do a lot of optimization, clean up the code and make the tracker overall smoother. 
+
+The core elements have been implemented where:
+OpenCV captures frames from webcame/DroidCam url. Dlib model used to extract face landmarks. OpenCV used again to projected into 3D space then the head yaw calculated from the rotational matrix. This data is send to the OpenTrack input UPD socket. Need to experiment with other method to possible improve this.
+
+## Left to do:
+1. Use less features landmark model for face (Immediate)
+2. Try lower resolution images to speed up
+3. Write function to smooth out camera motion
+4. Thread code where possible?
+5. Use GPU for image calculations?
+6. Add x,y,x tracking. (Currently only yaw) 
+7. Variable output port
+
+## Demo
+<img src="demoImage1.jpg" alt="Sample face tracking" height="200px"/>
+
+Will add more after testing
+
+I did originally want to use  SimConnect API, waiting on flight sim developers to fix/implement CameraRelative6DOF function. Guess publishers don't care about dev kits.
+
 <img src="https://i.imgur.com/7K7Thtq.jpg" alt="Sad Keanu" height="50px"/>
 
 # References:
 
-## Modules used
+## OpenTrack
+Nice software to support head tracking in a large variety of games
+Has a UPD port which listens for the head tracking data then it translates to which ever game the user wants
+https://github.com/opentrack/opentrack
 
+## Face model
+Open source model from http://dlib.net/files/. Could look into using a lighter weight one to improve performance.
+
+## Modules used
 1. DlibDotNet (face nn)
 2. OpenCvSharp (to read from ip camera) - shouldn't need if you afford a real webcam
-3. SimConnect (broken), waiting on flight sim devs to fix/implement CameraRelative6DOF function
 
 ## Bib
 * C# Facial landmarks:
 https://medium.com/machinelearningadvantage/detect-facial-landmark-points-with-c-and-dlib-in-only-50-lines-of-code-71ab59f8873f
 * Read from opencv wrapper to dlib
 https://github.com/takuya-takeuchi/DlibDotNet/blob/master/examples/WebcamFacePose/Program.cs
+* OpenCv 2d->3d point projection
+https://medium.com/analytics-vidhya/real-time-head-pose-estimation-with-opencv-and-dlib-e8dc10d62078
+* Get yaw, pitch and roll from rotational matrix
+http://planning.cs.uiuc.edu/node103.html
