@@ -45,10 +45,12 @@ namespace CVHeadTrack {
         // Neural net stuff
         private FrontalFaceDetector faceDetector;
         private ShapePredictor shapePredictor;
+        private MovingAverage movingAverage;
 
         public FaceDetector(String predictorUrl) {
             this.faceDetector = Dlib.GetFrontalFaceDetector();
             this.shapePredictor = ShapePredictor.Deserialize(predictorUrl);
+            this.movingAverage = new MovingAverage(25);
         }
 
         public bool ConnectCamera(String url) {
@@ -137,8 +139,8 @@ namespace CVHeadTrack {
                     keyPoints[i] = point;
                 }
                 Vec3d pose = ProcessFace(keyPoints);
-                double[] temp = { 0, 0, 0, pose.Item1, 0, 0 };
-                outputPose = temp;
+                this.movingAverage.Add(pose.Item1);
+                outputPose[3] = this.movingAverage.Average();
                 shape.Dispose();
             }
             frame.Dispose();
@@ -165,6 +167,7 @@ namespace CVHeadTrack {
                 Rectangle[] faces = this.faceDetector.Operator(img);
                 // No face return null
                 if (faces.Length == 0) {
+                    imageSource.Source = BitmapToImageSource(BitmapExtensions.ToBitmap(img));
                     frame.Dispose();
                     return false;
                 }
@@ -182,7 +185,8 @@ namespace CVHeadTrack {
                     keyPoints[i] = point;
                 }
                 Vec3d pose = ProcessFace(keyPoints);
-                outputPose[3] = pose.Item1;
+                this.movingAverage.Add(pose.Item1);
+                outputPose[3] = this.movingAverage.Average();
                 // Set image
                 System.Drawing.Bitmap bi = BitmapExtensions.ToBitmap(img);
                 imageSource.Source = BitmapToImageSource(bi);
