@@ -245,7 +245,8 @@ namespace CVHeadTrack {
         protected virtual void Dispose(bool disposing) {
             if (!disposedValue) {
                 if (disposing) {
-                    this.cap.Dispose();
+                    if (!(this.cap is null))
+                        this.cap.Dispose();
                     this.cameraMatrix.Dispose();
                     this.faceDetector.Dispose();
                     this.shapePredictor.Dispose();
