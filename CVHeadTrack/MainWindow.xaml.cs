@@ -68,6 +68,7 @@ namespace CVHeadTrack {
 
         void WindowClose(object sender, CancelEventArgs e) {
             this.faceDetector.Dispose();
+            this.updSocket.Close();
             CleanSimConnectHandle();
         }
 
