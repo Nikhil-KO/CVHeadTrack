@@ -14,7 +14,6 @@
         </Grid.ColumnDefinitions>
         <Button Content="Link with flight sim" Margin="0,98,215,0" Height="27" VerticalAlignment="Top" Click="LinkFlightSim" Grid.Column="1" HorizontalAlignment="Right" Width="140"/>
         <Button x:Name="ConnectCameraButton" Content="Connect to camera &#xD;&#xA;and init Neural net" Margin="0,130,215,0" VerticalAlignment="Top" Height="65" Click="ConnectCamera" Grid.Column="1" HorizontalAlignment="Right" Width="140"/>
-        <Button Content="Start with &#xD;&#xA;debug image" Margin="0,130,40,0" VerticalAlignment="Top" Height="65" Grid.Column="1" Click="DebugImageTest" HorizontalAlignment="Right" Width="140"/>
         <TextBlock x:Name="DebugPanel" Margin="40,24,40,0" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2" Background="#B2311FE4"><Run Text="Debug pannel"/><LineBreak/><Run/></TextBlock>
         <Image Name="ImageItem" Margin="242,231,208,0" Grid.ColumnSpan="2" Height="317" VerticalAlignment="Top"/>
         <TextBox x:Name="CameraUrl" HorizontalAlignment="Left" Height="23" Margin="99,134,0,0" TextWrapping="Wrap" Text="http://192.168.1.13:4747/video" VerticalAlignment="Top" Width="229"/>
@@ -40,7 +39,7 @@
             <TextBlock x:Name="UserTrackRoll" HorizontalAlignment="Left" Margin="10,118,0,0" TextWrapping="Wrap" Text="-" VerticalAlignment="Top" Width="58" Grid.Column="1"/>
         </Grid>
         <Slider x:Name="TestSlider" HorizontalAlignment="Left" Margin="10,190,0,0" VerticalAlignment="Top" Width="488" Maximum="67" TickPlacement="TopLeft" SmallChange="1" Cursor="Arrow" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
-        <Button x:Name="TestVariableImage" Content="Test Variable image" Grid.Column="1" HorizontalAlignment="Right" Margin="0,200,40,0" VerticalAlignment="Top" Width="140" Height="27" Click="TestVariableImage_Click"/>
+        <Button x:Name="TestVariableImage" Content="Test Variable image" Grid.Column="1" HorizontalAlignment="Right" Margin="0,130,40,0" VerticalAlignment="Top" Width="140" Height="27" Click="TestVariableImage_Click"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="153,61,0,0" TextWrapping="Wrap" Text="Live run" VerticalAlignment="Top" Height="26" Width="140"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="328,61,0,0" TextWrapping="Wrap" Text="Debug/testing" VerticalAlignment="Top" Height="26" Width="140"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,169,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="488"><Run Text="This slider just helps find the id of useful facial landmarks."/><Run Text=" (remove before release build)"/></TextBlock>

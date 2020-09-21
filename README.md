@@ -53,3 +53,5 @@ https://github.com/takuya-takeuchi/DlibDotNet/blob/master/examples/WebcamFacePos
 https://medium.com/analytics-vidhya/real-time-head-pose-estimation-with-opencv-and-dlib-e8dc10d62078
 * Get yaw, pitch and roll from rotational matrix
 http://planning.cs.uiuc.edu/node103.html
+* SimConnect Docs
+http://www.prepar3d.com/SDKv3/LearningCenter/utilities/simconnect/simconnect.html
