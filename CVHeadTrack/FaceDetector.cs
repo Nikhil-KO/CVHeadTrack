@@ -54,7 +54,7 @@ namespace CVHeadTrack {
         }
 
         public bool ConnectCamera(String url) {
-            this.cap = url.Equals("") ? new VideoCapture() : new VideoCapture(url);
+            this.cap = url.Equals("") ? new VideoCapture(0) : new VideoCapture(url);
             if (this.cap.IsOpened()) {
                 Mat frame = new Mat();
                 if (!this.cap.Read(frame)) {
